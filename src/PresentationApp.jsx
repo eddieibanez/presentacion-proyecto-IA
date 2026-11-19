@@ -1101,6 +1101,11 @@ function Slide7() {
               <span className="demo-btn-text">INGRESAR A LA DEMOSTRACIÓN EN VIVO</span>
               <span className="demo-btn-arrow">↗</span>
             </a>
+
+            <div className="enter-shortcut-pill">
+              <span className="enter-key-badge">Enter ↵</span>
+              <span className="enter-key-text">Presiona Enter para lanzar la plataforma</span>
+            </div>
           </div>
         </div>
 
@@ -1162,11 +1167,18 @@ export default function PresentationApp() {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 
       switch (e.key) {
+        case 'Enter':
+          e.preventDefault();
+          if (currentSlide === TOTAL_SLIDES - 1) {
+            window.open('https://codecraftbeta.vercel.app/', '_blank');
+          } else {
+            goNext();
+          }
+          break;
         case 'ArrowRight':
         case 'd':
         case 'D':
         case ' ':
-        case 'Enter':
           e.preventDefault();
           goNext();
           break;
@@ -1189,7 +1201,7 @@ export default function PresentationApp() {
 
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
-  }, [goNext, goPrev, toggleFullscreen]);
+  }, [currentSlide, goNext, goPrev, toggleFullscreen]);
 
   // Fullscreen event listener
   useEffect(() => {
