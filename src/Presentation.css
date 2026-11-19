@@ -889,46 +889,255 @@ html, body, #root {
   min-height: 170px;
 }
 
-/* Scratch Demo */
-.scratch-stage {
+/* ═══════════════════════════════════════════════════════════
+   SCRATCH SIMULATOR (Vertical Blocks, Cat Movement & Speech)
+   ═══════════════════════════════════════════════════════════ */
+
+.scratch-stage-wrapper {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 0.75rem;
+  gap: 0.8rem;
+  width: 100%;
 }
 
-.scratch-cat {
-  font-size: 2.8rem;
-  transition: transform 0.3s;
+.scratch-stage-split {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 1.1rem;
+  align-items: stretch;
 }
 
-.scratch-cat.moving {
-  animation: scratchHop 0.6s ease-in-out infinite alternate;
-}
-
-@keyframes scratchHop {
-  from { transform: translateX(-25px) rotate(-6deg); }
-  to   { transform: translateX(25px) rotate(6deg); }
-}
-
-.scratch-blocks {
+/* Bloques de Scratch en Vertical */
+.scratch-blocks-vertical {
   display: flex;
-  gap: 0.4rem;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 5px;
+  align-items: flex-start;
   justify-content: center;
+  background: rgba(13, 13, 24, 0.6);
+  padding: 0.75rem 0.85rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .scratch-block {
-  padding: 0.35rem 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.42rem 0.8rem;
   border-radius: 6px;
   font-family: var(--font-mono);
-  font-size: 0.72rem;
-  font-weight: 600;
+  font-size: 0.74rem;
+  font-weight: 700;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  position: relative;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  width: 100%;
 }
 
-.block-events { background: #FFBF00; color: #1e1e1e; }
-.block-motion { background: #4C97FF; color: white; }
-.block-looks  { background: #9966FF; color: white; }
+.scratch-block.block-active {
+  transform: translateX(4px) scale(1.02);
+  box-shadow: 0 0 14px #FFFFFF, 0 0 22px currentColor;
+}
+
+.block-events {
+  background: #FFAB19;
+  color: #2D1A00;
+  border-radius: 12px 12px 4px 4px;
+}
+
+.block-motion {
+  background: #4C97FF;
+  color: #FFFFFF;
+}
+
+.block-looks {
+  background: #9966FF;
+  color: #FFFFFF;
+}
+
+.block-num-bubble,
+.block-text-bubble {
+  background: #FFFFFF;
+  color: #1A202C;
+  padding: 0.1rem 0.45rem;
+  border-radius: 10px;
+  font-weight: 800;
+  font-size: 0.72rem;
+}
+
+.block-flag-icon {
+  font-size: 0.85rem;
+}
+
+/* Escenario y Viewport de Scratch */
+.scratch-stage-canvas {
+  background: #111424;
+  border: 1px solid rgba(0, 210, 255, 0.25);
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.6);
+}
+
+.scratch-stage-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.35rem 0.75rem;
+  background: rgba(26, 26, 46, 0.95);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.stage-controls-left {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.scratch-flag-btn,
+.scratch-stop-btn {
+  background: transparent;
+  border: none;
+  font-size: 0.95rem;
+  cursor: pointer;
+  padding: 0.15rem 0.3rem;
+  border-radius: 4px;
+  transition: transform 0.2s, background 0.2s;
+}
+
+.scratch-flag-btn:hover {
+  transform: scale(1.15);
+  background: rgba(40, 200, 64, 0.2);
+}
+
+.scratch-stop-btn:hover {
+  transform: scale(1.15);
+  background: rgba(255, 95, 87, 0.2);
+}
+
+.stage-coord-label {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--cc-text-subtle);
+}
+
+.scratch-viewport {
+  position: relative;
+  height: 125px;
+  width: 100%;
+  overflow: hidden;
+  background: radial-gradient(circle at 50% 50%, rgba(0, 188, 212, 0.06) 0%, transparent 80%);
+}
+
+.scratch-stage-ground {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border-top: 1px dashed rgba(255, 255, 255, 0.12);
+}
+
+/* Personaje (Cat Actor) */
+.scratch-cat-actor {
+  position: absolute;
+  bottom: 12px;
+  left: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: transform 0.9s cubic-bezier(0.25, 1, 0.5, 1);
+  z-index: 2;
+}
+
+.scratch-cat-actor.moved {
+  transform: translateX(78px);
+}
+
+.cat-walking {
+  animation: catWalkBob 0.22s ease-in-out infinite alternate;
+}
+
+@keyframes catWalkBob {
+  from { transform: translateY(0) rotate(-4deg); }
+  to   { transform: translateY(-6px) rotate(4deg); }
+}
+
+/* Bocadillo de diálogo Scratch oficial */
+.scratch-speech-bubble {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-35%);
+  margin-bottom: 6px;
+  background: #FFFFFF;
+  color: #111827;
+  padding: 0.35rem 0.65rem;
+  border-radius: 10px;
+  font-family: var(--font-main);
+  font-weight: 800;
+  font-size: 0.72rem;
+  white-space: nowrap;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+  animation: bubblePopIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  z-index: 10;
+}
+
+.speech-tail {
+  position: absolute;
+  top: 100%;
+  left: 30%;
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 7px solid #FFFFFF;
+}
+
+@keyframes bubblePopIn {
+  0%   { opacity: 0; transform: translateX(-35%) scale(0.4); }
+  100% { opacity: 1; transform: translateX(-35%) scale(1); }
+}
+
+/* Botones de acción inferiores */
+.scratch-actions-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.scratch-run-btn {
+  flex: 1;
+  justify-content: center;
+  font-weight: 700;
+}
+
+.scratch-secondary-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--cc-border-glass);
+  color: var(--cc-text-subtle);
+  padding: 0.45rem 0.95rem;
+  border-radius: 50px;
+  font-family: var(--font-main);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.scratch-secondary-btn:hover {
+  background: rgba(255, 95, 87, 0.2);
+  color: #FF5F57;
+  border-color: #FF5F57;
+}
+
+@media (max-width: 600px) {
+  .scratch-stage-split {
+    grid-template-columns: 1fr;
+  }
+}
 
 /* Arduino Demo */
 .led-circuit {

@@ -306,9 +306,37 @@ function Slide2({ subStep, setSubStep, goNext, goPrev }) {
 function Slide3({ subStep, setSubStep, goNext, goPrev }) {
   const paradigm = subStep;
   const [ledOn, setLedOn] = useState(false);
-  const [scratchRunning, setScratchRunning] = useState(false);
+  const [scratchStep, setScratchStep] = useState(0); // 0=idle, 1=flag, 2=walking, 3=speaking
+  const [scratchPlayKey, setScratchPlayKey] = useState(0);
+  const scratchTimeoutRef = useRef([]);
   const [pythonRunning, setPythonRunning] = useState(false);
   const [pythonKey, setPythonKey] = useState(0);
+
+  const runScratchDemo = () => {
+    scratchTimeoutRef.current.forEach(clearTimeout);
+    scratchTimeoutRef.current = [];
+
+    // Force remount to reset cat position instantly to 0
+    setScratchPlayKey((k) => k + 1);
+    setScratchStep(1); // 1. Flag event triggered
+
+    const t1 = setTimeout(() => {
+      setScratchStep(2); // 2. Move 15 steps
+    }, 300);
+
+    const t2 = setTimeout(() => {
+      setScratchStep(3); // 3. Speak "¡Construyendo el futuro!"
+    }, 1200);
+
+    scratchTimeoutRef.current.push(t1, t2);
+  };
+
+  const resetScratchDemo = () => {
+    scratchTimeoutRef.current.forEach(clearTimeout);
+    scratchTimeoutRef.current = [];
+    setScratchStep(0);
+    setScratchPlayKey((k) => k + 1);
+  };
 
   const paradigms = {
     1: {
@@ -383,20 +411,104 @@ function Slide3({ subStep, setSubStep, goNext, goPrev }) {
 
             <div className="demo-body">
               {paradigm === 1 && (
-                <div className="scratch-stage">
-                  <div className={`scratch-cat ${scratchRunning ? 'moving' : ''}`}>🐱</div>
-                  <div className="scratch-blocks">
-                    <span className="scratch-block block-events">🏁 Al presionar bandera</span>
-                    <span className="scratch-block block-motion">Mover 15 pasos</span>
-                    <span className="scratch-block block-looks">Decir "¡Construyendo el futuro!"</span>
+                <div className="scratch-stage-wrapper">
+                  <div className="scratch-stage-split" key={scratchPlayKey}>
+                    {/* Bloques de código apilados VERTICALMENTE */}
+                    <div className="scratch-blocks-vertical">
+                      <div className={`scratch-block block-events ${scratchStep === 1 ? 'block-active' : ''}`}>
+                        <span className="block-flag-icon">🏁</span> al presionar bandera
+                      </div>
+                      <div className={`scratch-block block-motion ${scratchStep === 2 ? 'block-active' : ''}`}>
+                        mover <span className="block-num-bubble">15</span> pasos
+                      </div>
+                      <div className={`scratch-block block-looks ${scratchStep === 3 ? 'block-active' : ''}`}>
+                        decir <span className="block-text-bubble">"¡Construyendo el futuro!"</span>
+                      </div>
+                    </div>
+
+                    {/* Escenario con el Gato y el bocadillo de diálogo */}
+                    <div className="scratch-stage-canvas">
+                      <div className="scratch-stage-toolbar">
+                        <div className="stage-controls-left">
+                          <button
+                            type="button"
+                            className={`scratch-flag-btn ${scratchStep > 0 ? 'active' : ''}`}
+                            onClick={runScratchDemo}
+                            title="Ejecutar bloques (Bandera verde)"
+                          >
+                            🚩
+                          </button>
+                          <button
+                            type="button"
+                            className="scratch-stop-btn"
+                            onClick={resetScratchDemo}
+                            title="Detener y reiniciar al punto inicial"
+                          >
+                            🛑
+                          </button>
+                        </div>
+                        <span className="stage-coord-label">
+                          {scratchStep >= 2 ? 'x: 15  y: 0' : 'x: 0  y: 0'}
+                        </span>
+                      </div>
+
+                      <div className="scratch-viewport">
+                        <div className={`scratch-cat-actor ${scratchStep >= 2 ? 'moved' : ''}`}>
+                          {/* Bocadillo de diálogo de Scratch cuando dice la frase */}
+                          {scratchStep === 3 && (
+                            <div className="scratch-speech-bubble">
+                              <span>¡Construyendo el futuro!</span>
+                              <div className="speech-tail" />
+                            </div>
+                          )}
+                          <div className={`scratch-cat-body ${scratchStep === 2 ? 'cat-walking' : ''}`}>
+                            <svg width="48" height="48" viewBox="0 0 100 100" fill="none" className="scratch-cat-svg">
+                              {/* Orejas */}
+                              <polygon points="20,40 10,12 38,24" fill="#FFAB19" stroke="#E69500" strokeWidth="3" strokeLinejoin="round" />
+                              <polygon points="18,34 14,18 32,24" fill="#FFFFFF" opacity="0.65" />
+                              <polygon points="80,40 90,12 62,24" fill="#FFAB19" stroke="#E69500" strokeWidth="3" strokeLinejoin="round" />
+                              <polygon points="82,34 86,18 68,24" fill="#FFFFFF" opacity="0.65" />
+                              {/* Cabeza */}
+                              <ellipse cx="50" cy="50" rx="36" ry="32" fill="#FFAB19" stroke="#E69500" strokeWidth="3" />
+                              {/* Bigotes */}
+                              <line x1="8" y1="46" x2="30" y2="48" stroke="#2D1A00" strokeWidth="2.5" strokeLinecap="round" />
+                              <line x1="8" y1="56" x2="30" y2="54" stroke="#2D1A00" strokeWidth="2.5" strokeLinecap="round" />
+                              <line x1="92" y1="46" x2="70" y2="48" stroke="#2D1A00" strokeWidth="2.5" strokeLinecap="round" />
+                              <line x1="92" y1="56" x2="70" y2="54" stroke="#2D1A00" strokeWidth="2.5" strokeLinecap="round" />
+                              {/* Hocico blanco */}
+                              <ellipse cx="50" cy="58" rx="20" ry="14" fill="#FFFFFF" />
+                              {/* Ojos */}
+                              <ellipse cx="38" cy="42" rx="5" ry="7" fill="#2D1A00" />
+                              <circle cx="36.5" cy="40" r="2" fill="#FFFFFF" />
+                              <ellipse cx="62" cy="42" rx="5" ry="7" fill="#2D1A00" />
+                              <circle cx="60.5" cy="40" r="2" fill="#FFFFFF" />
+                              {/* Nariz y sonrisa */}
+                              <polygon points="50,53 46,49 54,49" fill="#FF5252" />
+                              <path d="M 44 57 Q 50 63 56 57" stroke="#2D1A00" strokeWidth="2.5" fill="none" strokeLinecap="round" />
+                            </svg>
+                          </div>
+                        </div>
+                        <div className="scratch-stage-ground" />
+                      </div>
+                    </div>
                   </div>
-                  <button
-                    className="pill-btn"
-                    onClick={() => setScratchRunning(!scratchRunning)}
-                    style={{ marginTop: '0.4rem' }}
-                  >
-                    {scratchRunning ? '⏹ Detener Ejecución' : '▶ Probar Bloques de Scratch'}
-                  </button>
+
+                  <div className="scratch-actions-row">
+                    <button
+                      className="pill-btn scratch-run-btn"
+                      onClick={runScratchDemo}
+                    >
+                      {scratchStep > 0 ? '🔄 Reiniciar y Reproducir de Nuevo' : '▶ Probar Bloques de Scratch'}
+                    </button>
+                    {scratchStep > 0 && (
+                      <button
+                        className="scratch-secondary-btn"
+                        onClick={resetScratchDemo}
+                      >
+                        ⏹ Reiniciar
+                      </button>
+                    )}
+                  </div>
                 </div>
               )}
 
